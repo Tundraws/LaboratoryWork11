@@ -1,0 +1,73 @@
+services:
+  go-service:
+    build:
+      context: ./go-service
+    container_name: lr11-go-service
+    environment:
+      GO_SERVICE_PORT: "8080"
+      SERVICE_NAME: go-service
+      SHARED_DIR: /shared
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - lab-data:/shared
+    networks:
+      - lab-network
+
+  python-service:
+    build:
+      context: ./python-service
+    container_name: lr11-python-service
+    environment:
+      PYTHON_SERVICE_PORT: "8000"
+      SERVICE_NAME: python-service
+      SHARED_DIR: /shared
+    depends_on:
+      go-service:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - lab-data:/shared
+    networks:
+      - lab-network
+
+  rust-service:
+    build:
+      context: ./rust-service
+    container_name: lr11-rust-service
+    environment:
+      RUST_SERVICE_PORT: "9000"
+      SERVICE_NAME: rust-service
+      SHARED_DIR: /shared
+    depends_on:
+      go-service:
+        condition: service_healthy
+    ports:
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - lab-data:/shared
+    networks:
+      - lab-network
+
+volumes:
+  lab-data:
+
+networks:
+  lab-network:
+    driver: bridge

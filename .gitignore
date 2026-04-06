@@ -1,0 +1,34 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Go artifacts
+*.exe
+*.test
+*.out
+coverage.out
+coverage
+.coverprofile
+**/.cache/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+dist/
+build/
+.coverage
+
+# Rust artifacts
+target/
+**/target/
+
+# Docker and logs
+*.log
