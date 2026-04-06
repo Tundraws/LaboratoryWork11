@@ -64,6 +64,12 @@ docker compose up --build
 - Python-сервис: `http://localhost:8000`
 - Rust-сервис: `http://localhost:9000`
 
+Для проверки маршрутов используйте именно эти HTTP-эндпоинты:
+
+- Python: `GET /`
+- Go: `GET /health`, `POST /write`, `GET /shared`
+- Rust: `GET /health`, `POST /write`, `GET /shared`
+
 ### Проверка volume
 
 Каждый сервис пишет служебный файл в общий volume `/shared`. После запуска можно открыть:
@@ -77,14 +83,15 @@ docker compose up --build
 ### Go
 
 ```http
+GET /health
 POST /write
-
 GET /shared
 ```
 
 ### Python
 
 ```http
+GET /
 POST /write
 
 GET /shared
@@ -93,8 +100,8 @@ GET /shared
 ### Rust
 
 ```http
+GET /health
 POST /write
-
 GET /shared
 ```
 

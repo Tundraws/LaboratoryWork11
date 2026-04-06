@@ -3,7 +3,7 @@ use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 const DEFAULT_PORT: u16 = 9000;
 
@@ -20,18 +20,20 @@ fn main() -> std::io::Result<()> {
     let listener = TcpListener::bind(("0.0.0.0", port))?;
     println!("{} listening on 0.0.0.0:{}", service_name, port);
 
-    for incoming in listener.incoming() {
-        match incoming {
-            Ok(stream) => {
+    loop {
+        match listener.accept() {
+            Ok((stream, _addr)) => {
                 if let Err(err) = handle_client(stream, &service_name, &shared_dir) {
                     eprintln!("request error: {err}");
                 }
             }
-            Err(err) => eprintln!("connection error: {err}"),
+            Err(err) if err.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(err) => {
+                eprintln!("connection error: {err}");
+                std::thread::sleep(Duration::from_millis(200));
+            }
         }
     }
-
-    Ok(())
 }
 
 fn env_or(name: &str, fallback: &str) -> String {
