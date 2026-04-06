@@ -20,13 +20,13 @@ jobs:
         include:
           - name: go-service
             context: ./go-service
-            image: ghcr.io/${{ github.repository_owner }}/laboratorywork11-go
+            image: ghcr.io/tundraws/laboratorywork11-go
           - name: python-service
             context: ./python-service
-            image: ghcr.io/${{ github.repository_owner }}/laboratorywork11-python
+            image: ghcr.io/tundraws/laboratorywork11-python
           - name: rust-service
             context: ./rust-service
-            image: ghcr.io/${{ github.repository_owner }}/laboratorywork11-rust
+            image: ghcr.io/tundraws/laboratorywork11-rust
 
     steps:
       - name: Check out repository
