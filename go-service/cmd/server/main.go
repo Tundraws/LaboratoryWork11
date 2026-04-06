@@ -23,6 +23,23 @@ func main() {
 		log.Printf("bootstrap shared data: %v", err)
 	}
 
+	mux := newMux(serviceName, sharedDir)
+
+	server := &http.Server{
+		Addr:         ":" + port,
+		Handler:      mux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
+		IdleTimeout:  10 * time.Second,
+	}
+
+	log.Printf("%s listening on %s", serviceName, server.Addr)
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatal(err)
+	}
+}
+
+func newMux(serviceName, sharedDir string) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -71,18 +88,7 @@ func main() {
 		})
 	})
 
-	server := &http.Server{
-		Addr:         ":" + port,
-		Handler:      mux,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
-		IdleTimeout:  10 * time.Second,
-	}
-
-	log.Printf("%s listening on %s", serviceName, server.Addr)
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal(err)
-	}
+	return mux
 }
 
 func envOr(name, fallback string) string {

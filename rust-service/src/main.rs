@@ -157,3 +157,58 @@ fn unix_timestamp() -> u64 {
         .map(|duration| duration.as_secs())
         .unwrap_or(0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn temp_dir(name: &str) -> PathBuf {
+        let mut dir = std::env::temp_dir();
+        let unique = format!(
+            "lr11-{name}-{}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("time went backwards")
+                .as_nanos()
+        );
+        dir.push(unique);
+        dir
+    }
+
+    #[test]
+    fn env_or_trims_and_falls_back() {
+        let key = "LR11_RUST_ENV";
+        std::env::remove_var(key);
+        assert_eq!(env_or(key, "fallback"), "fallback");
+
+        std::env::set_var(key, "  value  ");
+        assert_eq!(env_or(key, "fallback"), "value");
+        std::env::remove_var(key);
+    }
+
+    #[test]
+    fn json_helpers_escape_values() {
+        assert_eq!(escape_json("a\"b\\c\n"), "a\\\"b\\\\c\\n");
+        let payload = json_response("rust-service", "ok", Some("hello"));
+        assert!(payload.contains("\"service\":\"rust-service\""));
+        assert!(payload.contains("\"status\":\"ok\""));
+        assert!(payload.contains("\"details\":\"hello\""));
+    }
+
+    #[test]
+    fn bootstrap_and_snapshot_shared_data() {
+        let dir = temp_dir("shared");
+        fs::create_dir_all(&dir).expect("create temp dir");
+
+        bootstrap(&dir, "rust-service").expect("bootstrap shared dir");
+        fs::write(dir.join("alpha.txt"), "alpha").expect("write secondary file");
+
+        let snapshot = shared_snapshot("rust-service", &dir).expect("snapshot shared dir");
+        assert!(snapshot.contains("\"service\":\"rust-service\""));
+        assert!(snapshot.contains("\"alpha.txt\":\"alpha\""));
+        assert!(snapshot.contains("\"rust-service.txt\""));
+
+        fs::remove_dir_all(&dir).expect("cleanup temp dir");
+    }
+}
